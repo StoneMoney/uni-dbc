@@ -1,3 +1,16 @@
+/***
+ * Authors:
+ *      Farrell, Stephen
+ *      Giancursio, Nick
+ *      Gerber, Max
+ *      Gao, Fei
+ * Class: ISTE-330.02 DatabaseConnectivity and Access
+ * Date: 4/17/2021
+ * Professor: Habermas, Jim
+ * Assignment: ISTE-330.02 Group Project Group 4
+ * File: FrontEnd.java
+ */
+
 import java.awt.*;
 
 import javax.swing.*;
