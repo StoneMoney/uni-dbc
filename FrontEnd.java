@@ -32,6 +32,7 @@ public class FrontEnd extends JFrame {
    JTextField searchBox;
    JButton searchButton;
    JButton viewButton;
+   JMenuItem tableInfo;
    JList resultsList;
    int[] allIds;
    String currentTable;
@@ -39,6 +40,7 @@ public class FrontEnd extends JFrame {
       super("University Database Controller");
       this.backend = backend;
       backend.connect();
+      currentTable = "null";
       JPanel mainLayoutPanel = new JPanel(new BorderLayout());
       // SIDEBAR
       JPanel databaseSelectorPanel = new JPanel();
@@ -46,7 +48,7 @@ public class FrontEnd extends JFrame {
       JButton facultyButton = new JButton("Faculty");
       JButton studentsButton = new JButton("Student");
       JButton degreesButton = new JButton("Degree");
-      JButton interestsButton = new JButton("Interests");
+      JButton interestsButton = new JButton("Interest");
       databaseSelectorPanel.add(facultyButton);
       databaseSelectorPanel.add(studentsButton);
       databaseSelectorPanel.add(degreesButton);
@@ -58,7 +60,7 @@ public class FrontEnd extends JFrame {
          JPanel searchSelectors = new JPanel(new GridLayout(1,2));
          JPanel searchForPanel = new JPanel(new BorderLayout());
          JLabel searchForLabel = new JLabel("Search for:");
-         String[] searchForTerms = {"Faculty","Student","Interests","Degree","Department"};
+         String[] searchForTerms = {"Faculty","Student","Interest","Degree","Department"};
          searchFor = new JComboBox(searchForTerms);
          searchForPanel.add(searchForLabel, BorderLayout.NORTH);
          searchForPanel.add(searchFor, BorderLayout.CENTER);
@@ -88,8 +90,11 @@ public class FrontEnd extends JFrame {
       JMenuBar infoBar = new JMenuBar();
       JMenuItem login = new JMenuItem("Logged in as "+backend.getUsername());
       login.setEnabled(false);
+      tableInfo = new JMenuItem("Viewing "+currentTable+" table");
+      tableInfo.setEnabled(false);
       JMenuItem logout = new JMenuItem("Log Out");
       infoBar.add(login);
+      infoBar.add(tableInfo);
       infoBar.add(logout);
       setJMenuBar(infoBar);
       // VISIBILITY AND FRAMING
@@ -126,7 +131,7 @@ public class FrontEnd extends JFrame {
       });
       interestsButton.addActionListener(new ActionListener() {
          public void actionPerformed(ActionEvent e) {
-            getList("Interests");
+            getList("Interest");
          }
       });
       viewButton.addActionListener(new ActionListener() {
@@ -138,7 +143,7 @@ public class FrontEnd extends JFrame {
       });
       searchButton.addActionListener(new ActionListener () {
          public void actionPerformed(ActionEvent e) {
-            search((String)searchBox.getText());  
+            search();  
          }
       });
    }
@@ -151,8 +156,13 @@ public class FrontEnd extends JFrame {
    
    public void getList(String table) {
       ArrayList<MatchingData> matching = backend.getList(table);
-      resultsList.clearSelection();
       currentTable = table;
+      tableInfo.setText("Viewing "+currentTable+" table");
+      loadList(matching);
+   }
+   
+   public void loadList(ArrayList<MatchingData> matching) {
+      resultsList.clearSelection();
       String[] allStrings = new String[matching.size()];
       allIds = new int[matching.size()];
       for(int i = 0; i < matching.size(); i++) {
@@ -172,24 +182,27 @@ public class FrontEnd extends JFrame {
        JOptionPane.showMessageDialog(null, scrollableArea, "Information", JOptionPane.PLAIN_MESSAGE);
    }
    
-   public void search(String searchTerm) {
+   public void search() {
       //TABLE, the table in the db to be looking through
-      //String table = (String)searchFor.getSelected();
+      String table = (String)searchFor.getSelectedItem();
       //TERM, the category/data field to be looking at
-      //String term = (String)searchUsing.getSelected();
+      String term = (String)searchUsing.getSelectedItem();
       //SEARCH TERM, the actual text to search for
       // (declaired as a param)
-      
+      currentTable = table;
+      tableInfo.setText("Viewing "+currentTable+" table");
+      String searchTerm = (String)searchBox.getText();
+      loadList(backend.search(table,term,searchTerm));
    }
    public String[] updateSearchUsing(String selection) {
       switch (selection) {
          case "Faculty":
-            String[] terms = {"First Name","Last Name","Department","Email","Phone Number","Interests","Office Number","Abstracts"};
+            String[] terms = {"First Name","Last Name","Department","Email","Phone Number","Interest","Office Number","Abstracts"};
             return terms;
          case "Student":
-            String[] terms1 = {"First Name","Last Name","Interests","Degree","Email","Phone Number"};
+            String[] terms1 = {"First Name","Last Name","Interest","Degree","Email","Phone Number"};
             return terms1;
-         case "Interests":
+         case "Interest":
             String[] terms2 = {"Description"};
             return terms2;
          case "Degree":
