@@ -22,11 +22,15 @@ public class DataLayer {
     private ResultSet rs;
     private Statement stmt;
     private String sql;
-
+    private String username;
+    private String password;
     final String DEFAULT_Driver = "com.mysql.cj.jdbc.Driver";
 
     // Default Constructor
-    public DataLayer(){}
+    public DataLayer(String username, String password){
+      this.username = username;
+      this.password = password;
+    }
 
     /***
      * @return returns a database connection object.
@@ -35,21 +39,13 @@ public class DataLayer {
         conn = null;
         Scanner kb = new Scanner(System.in);
 
-        // Get user input for username
-        System.out.print("Please enter username: ");
-        String userName = kb.nextLine();
-
-        // Get user input for password
-        System.out.print("Please enter your password: ");
-        String password = kb.nextLine();
-
         String url = "jdbc:mysql://localhost/university";
 
         url = url + "?serverTimeZone=UTC";
 
         try{
             Class.forName(DEFAULT_Driver);
-            conn = DriverManager.getConnection(url, userName, password);
+            conn = DriverManager.getConnection(url, username, password);
         }
         catch (ClassNotFoundException cnfe){
             System.out.println("ERROR, CAN NOT CONNECT TO DATABASE!!!");
@@ -93,135 +89,204 @@ public class DataLayer {
         return true;
     }// End of close()
 
-
-    /***
-     * facultySearchForStudentWithInterest will perform a query and return an arrayList
-     * @param interestID integer that refers to the unique identifier in the interests table
-     * @return returns an arrayList of <user> type with Students who have a particular interest
-     */
-    public ArrayList<user> facultySearchForStudentWithInterest(int interestID){
-        ArrayList<user> listOfStudentsWithInterest = new ArrayList<user>();
-
-        String sql = "SELECT student.studentID, student.firstName, student.lastName, student.phoneNumber, student.email, interests.interestDescription" +
-                " FROM student" +
-                " JOIN student_interests" +
-                " ON student.studentID = student_interests.studentID" +
-                " JOIN interests" +
-                " ON interests.interestID = student_interests.interestID" +
-                " WHERE interests.interestID = " + interestID;
-
-        try{
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-
-
-            while (rs.next()) {
-                int studentID = rs.getInt(1);
-                String studentFirstName = rs.getString(2);
-                String studentLastName = rs.getString(3);
-                String studentPhoneNumber = rs.getString(4);
-                String studentEmail = rs.getString(5);
-                String studentInterestsDescription = rs.getString(6);
-
-                // Store the values in an array list
-                user Student = new user(studentID, studentFirstName, studentLastName, studentPhoneNumber, studentEmail);
-                listOfStudentsWithInterest.add(Student);
+   public String get(String table, int id) {
+      String ret = "";
+      try {
+         PreparedStatement stmt = conn.prepareStatement("SELECT * FROM "+table+" WHERE "+table+"ID = ?",ResultSet.TYPE_SCROLL_INSENSITIVE);
+         stmt.setInt(1,id);
+         ResultSet rs = stmt.executeQuery();
+         ResultSetMetaData rsmd = rs.getMetaData();
+         int colCount = rsmd.getColumnCount();
+         rs.next();
+         for(int i = 1; i < colCount; i++) {
+            ret+=rsmd.getColumnName(i)+": "+rs.getObject(i)+"\n";
+         }
+      } catch (SQLException sqle){
+         sqle.printStackTrace();
+      }
+      if(ret.length() == 0) {
+         ret = "Could not find type "+table+" of id "+id;
+      }
+      return ret;
+   }
+   
+   public ArrayList<MatchingData> getList(String table) {
+      String sql = "SELECT * FROM "+table.toLowerCase()+" LIMIT 10;";
+      ArrayList<MatchingData> list = new ArrayList<MatchingData>();
+      try {
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql);
+         ResultSetMetaData rsmd = rs.getMetaData();
+         int colCount = rsmd.getColumnCount();
+         while(rs.next()) {
+            //Column 1 is ALWAYS the id
+            int id = rs.getInt(1);
+            String displayString = "";
+            for(int i = 0; i < colCount; i++) {
+               switch(table) {
+                  case "Student":
+                  case "Faculty":
+                     displayString = rs.getString(2) + " " + rs.getString(3);
+                     break;
+                  case "Degree":
+                  case "Interest":
+                  case "Department":
+                     displayString = rs.getString(2);
+                     break;
+               }
             }
-        }
-        catch (SQLException sqle){
-            sqle.printStackTrace();
-        }
-        return listOfStudentsWithInterest;
-    }// End of facultySearchForStudentWithInterest
-
-
-    /***
-     * facultySearchForFacultyWithInterest will perform a query and return an arrayList
-     * @param interestID integer that refers to the unique identifier in the interests table
-     * @return returns an arrayList of <user> type with Faculty who have a particular interest
-     */
-    public ArrayList<user> facultySearchForFacultyWithInterest(int interestID){
-        ArrayList<user> listOfFacultyWithInterest = new ArrayList<user>();
-
-        String sql = "SELECT faculty.facultyID, faculty.firstName, faculty.lastName, faculty.phoneNumber, faculty.email, interests.interestDescription" +
-                " FROM faculty" +
-                " JOIN faculty_interests" +
-                " ON faculty.facultyID = faculty_interests.facultyID" +
-                " JOIN interests" +
-                " ON interests.interestID = faculty_interests.interestID" +
-                " WHERE interests.interestID = " + interestID;
-
-        try{
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-
-            while(rs.next()){
-                int facultyID = rs.getInt(1);
-                String facultyFirstName = rs.getString(2);
-                String facultyLastName = rs.getString(3);
-                String facultyPhoneNumber = rs.getString(4);
-                String facultyEmail = rs.getString(5);
-                String facultyInterestsDescription = rs.getString(6);
-
-                // Store the values in an array list
-                user Faculty = new user(facultyID, facultyFirstName, facultyLastName, facultyPhoneNumber, facultyEmail);
-                listOfFacultyWithInterest.add(Faculty);
-            }// End of WhileLoop
-        }// End of Try Block
-        catch(SQLException sqle){
-            System.out.println("ERROR MESSAGE -> " + sqle);
-            System.out.println("ERROR SQLException in facultySearchForFacultyWithInterest()");
-            sqle.printStackTrace();
-        }// End of catch block
-
-        return listOfFacultyWithInterest;
-    }// End of facultySearchForFacultyWithInterest
-
-
-    /***
-     * facultySearchForStudentwithDegree will perform a query and return an array list
-     * @param degreeID integer that refers to the unique identifier in the degree table
-     * @return returns an arrayList of <user> type with Student who have a particular degree
-     */
-    public ArrayList<user> facultySearchForStudentWithDegree(int degreeID){
-        ArrayList<user> listOfStudentsWithDegree = new ArrayList<>();
-
-        String sql = "SELECT student.studentID, student.firstName, student.lastName, student.phoneNumber, student.email, degree.degreeName" +
-                " FROM student" +
-                " JOIN student_degree" +
-                " ON student.studentID = student_degree.studentID" +
-                " JOIN degree" +
-                " ON degree.degreeID = student_degree.degreeID" +
-                " WHERE degree.degreeID = " + degreeID;
-
-        try{
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
-
-            while(rs.next()){
-                int studentID = rs.getInt(1);
-                String studentFirstName = rs.getString(2);
-                String studentLastName = rs.getString(3);
-                String studentPhoneNumber = rs.getString(4);
-                String studentEmail = rs.getString(5);
-                String studentDegree = rs.getString(6);
-
-                // Store the values in an array List
-                user Student = new user(studentID, studentFirstName, studentLastName, studentPhoneNumber,studentEmail);
-                listOfStudentsWithDegree.add(Student);
-            }// End of While Loop
-
-        }// End of Try Block
-        catch(SQLException sqle){
-            System.out.println("ERROR MESSAGE -> " + sqle);
-            System.out.println("ERROR SQLException in facultySearchForStudentWithDegree()");
-            sqle.printStackTrace();
-        }// End of Catch Block
-
-        return listOfStudentsWithDegree;
-    }// End of facultySearchForStudentWithDegree
-
-    /***
+            list.add(new MatchingData(id,displayString));
+         }
+      } catch (SQLException sqle){
+         sqle.printStackTrace();
+      }
+      return list;
+   }
+   
+   boolean addAttribute(String table, String attribute, int tableId, int thingId) {
+      String sql = "INSERT INTO "+table+"_"+attribute+" VALUES ("+tableId+","+thingId+");";
+      int changed = 0;
+      try {
+         Statement stmt = conn.createStatement();
+         changed = stmt.executeUpdate(sql);
+      } catch (SQLException sqle) {
+         System.out.println("Could not modify "+table+"_"+attribute+" to add value pair "+tableId+" "+thingId);
+         sqle.printStackTrace();
+      }
+      return (changed > 0);
+   }
+   
+//    public ArrayList<MatchingData> search(String table, String attribute, String search) {
+//       
+//    }
+    // /***
+//      * facultySearchForStudentWithInterest will perform a query and return an arrayList
+//      * @param interestID integer that refers to the unique identifier in the interests table
+//      * @return returns an arrayList of <user> type with Students who have a particular interest
+//      */
+//     public ArrayList<user> facultySearchForStudentWithInterest(int interestID){
+//         ArrayList<user> listOfStudentsWithInterest = new ArrayList<user>();
+// 
+//         String sql = "SELECT student.studentID, student.firstName, student.lastName, student.phoneNumber, student.email, interests.interestDescription" +
+//                 " FROM student" +
+//                 " JOIN student_interests" +
+//                 " ON student.studentID = student_interests.studentID" +
+//                 " JOIN interests" +
+//                 " ON interests.interestID = student_interests.interestID" +
+//                 " WHERE interests.interestID = " + interestID;
+// 
+//         try{
+//             Statement stmt = conn.createStatement();
+//             ResultSet rs = stmt.executeQuery(sql);
+// 
+// 
+//             while (rs.next()) {
+//                 int studentID = rs.getInt(1);
+//                 String studentFirstName = rs.getString(2);
+//                 String studentLastName = rs.getString(3);
+//                 String studentPhoneNumber = rs.getString(4);
+//                 String studentEmail = rs.getString(5);
+//                 String studentInterestsDescription = rs.getString(6);
+// 
+//                 // Store the values in an array list
+//                 user Student = new user(studentID, studentFirstName, studentLastName, studentPhoneNumber, studentEmail);
+//                 listOfStudentsWithInterest.add(Student);
+//             }
+//         }
+//         catch (SQLException sqle){
+//             sqle.printStackTrace();
+//         }
+//         return listOfStudentsWithInterest;
+//     }// End of facultySearchForStudentWithInterest
+// 
+// 
+//     /***
+//      * facultySearchForFacultyWithInterest will perform a query and return an arrayList
+//      * @param interestID integer that refers to the unique identifier in the interests table
+//      * @return returns an arrayList of <user> type with Faculty who have a particular interest
+//      */
+//     public ArrayList<user> facultySearchForFacultyWithInterest(int interestID){
+//         ArrayList<user> listOfFacultyWithInterest = new ArrayList<user>();
+// 
+//         String sql = "SELECT faculty.facultyID, faculty.firstName, faculty.lastName, faculty.phoneNumber, faculty.email, interests.interestDescription" +
+//                 " FROM faculty" +
+//                 " JOIN faculty_interests" +
+//                 " ON faculty.facultyID = faculty_interests.facultyID" +
+//                 " JOIN interests" +
+//                 " ON interests.interestID = faculty_interests.interestID" +
+//                 " WHERE interests.interestID = " + interestID;
+// 
+//         try{
+//             Statement stmt = conn.createStatement();
+//             ResultSet rs = stmt.executeQuery(sql);
+// 
+//             while(rs.next()){
+//                 int facultyID = rs.getInt(1);
+//                 String facultyFirstName = rs.getString(2);
+//                 String facultyLastName = rs.getString(3);
+//                 String facultyPhoneNumber = rs.getString(4);
+//                 String facultyEmail = rs.getString(5);
+//                 String facultyInterestsDescription = rs.getString(6);
+// 
+//                 // Store the values in an array list
+//                 user Faculty = new user(facultyID, facultyFirstName, facultyLastName, facultyPhoneNumber, facultyEmail);
+//                 listOfFacultyWithInterest.add(Faculty);
+//             }// End of WhileLoop
+//         }// End of Try Block
+//         catch(SQLException sqle){
+//             System.out.println("ERROR MESSAGE -> " + sqle);
+//             System.out.println("ERROR SQLException in facultySearchForFacultyWithInterest()");
+//             sqle.printStackTrace();
+//         }// End of catch block
+// 
+//         return listOfFacultyWithInterest;
+//     }// End of facultySearchForFacultyWithInterest
+// 
+// 
+//     /***
+//      * facultySearchForStudentwithDegree will perform a query and return an array list
+//      * @param degreeID integer that refers to the unique identifier in the degree table
+//      * @return returns an arrayList of <user> type with Student who have a particular degree
+//      */
+//     public ArrayList<user> facultySearchForStudentWithDegree(int degreeID){
+//         ArrayList<user> listOfStudentsWithDegree = new ArrayList<>();
+// 
+//         String sql = "SELECT student.studentID, student.firstName, student.lastName, student.phoneNumber, student.email, degree.degreeName" +
+//                 " FROM student" +
+//                 " JOIN student_degree" +
+//                 " ON student.studentID = student_degree.studentID" +
+//                 " JOIN degree" +
+//                 " ON degree.degreeID = student_degree.degreeID" +
+//                 " WHERE degree.degreeID = " + degreeID;
+// 
+//         try{
+//             Statement stmt = conn.createStatement();
+//             ResultSet rs = stmt.executeQuery(sql);
+// 
+//             while(rs.next()){
+//                 int studentID = rs.getInt(1);
+//                 String studentFirstName = rs.getString(2);
+//                 String studentLastName = rs.getString(3);
+//                 String studentPhoneNumber = rs.getString(4);
+//                 String studentEmail = rs.getString(5);
+//                 String studentDegree = rs.getString(6);
+// 
+//                 // Store the values in an array List
+//                 user Student = new user(studentID, studentFirstName, studentLastName, studentPhoneNumber,studentEmail);
+//                 listOfStudentsWithDegree.add(Student);
+//             }// End of While Loop
+// 
+//         }// End of Try Block
+//         catch(SQLException sqle){
+//             System.out.println("ERROR MESSAGE -> " + sqle);
+//             System.out.println("ERROR SQLException in facultySearchForStudentWithDegree()");
+//             sqle.printStackTrace();
+//         }// End of Catch Block
+// 
+//         return listOfStudentsWithDegree;
+//     }// End of facultySearchForStudentWithDegree
+// 
+     /***
      * Deletes student entry from student table
      * @param studentID integer referring to unique studentID
      * @return returns true if student is deleted, false if something goes wrong.
@@ -401,12 +466,13 @@ public class DataLayer {
     }// end of insertStudent
 
 
-
+   public String getUsername() {
+      return username;
+   }
 
     public static void main(String[] args) {
-        DataLayer dataLayer = new DataLayer();
+        DataLayer dataLayer = new DataLayer("root","student");
         dataLayer.connect();
-
         System.out.println("Hello!");
     }
 

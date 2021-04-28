@@ -93,7 +93,7 @@ public class Login extends JFrame implements ActionListener {
                     labelMessage.setText("Login Successful");
                     System.out.println("Login Successful");
                     this.dispose();
-                    FrontEnd frontEnd = new FrontEnd();
+                    FrontEnd frontEnd = new FrontEnd(new DataLayer(userName,password));
                 }
                 // If Password is incorrect
                 else {
