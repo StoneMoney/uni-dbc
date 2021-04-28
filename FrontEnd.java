@@ -36,7 +36,7 @@ public class FrontEnd extends JFrame {
    JList resultsList;
    int[] allIds;
    String currentTable;
-   public FrontEnd(DataLayer backend) {
+   public FrontEnd(DataLayer backend,String userName) {
       super("University Database Controller");
       this.backend = backend;
       backend.connect();
@@ -88,7 +88,7 @@ public class FrontEnd extends JFrame {
       mainLayoutPanel.add(scrollableMainArea, BorderLayout.CENTER);
       // MENU BAR
       JMenuBar infoBar = new JMenuBar();
-      JMenuItem login = new JMenuItem("Logged in as "+backend.getUsername());
+      JMenuItem login = new JMenuItem("Logged in as "+userName);
       login.setEnabled(false);
       tableInfo = new JMenuItem("Viewing "+currentTable+" table");
       tableInfo.setEnabled(false);
@@ -144,6 +144,11 @@ public class FrontEnd extends JFrame {
       searchButton.addActionListener(new ActionListener () {
          public void actionPerformed(ActionEvent e) {
             search();  
+         }
+      });
+      logout.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            logout();
          }
       });
    }
@@ -214,7 +219,14 @@ public class FrontEnd extends JFrame {
       }
       return null;
    }
+   
+   public void logout() {
+      this.dispose();
+      backend.close();
+      Login.launch();
+   }
+   
    public static void main(String[] args) {
-      FrontEnd fe = new FrontEnd(new DataLayer("root","student"));
+      FrontEnd fe = new FrontEnd(new DataLayer(),"Test Launch");
    }
 }

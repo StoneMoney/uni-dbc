@@ -93,7 +93,7 @@ public class Login extends JFrame implements ActionListener {
                     labelMessage.setText("Login Successful");
                     System.out.println("Login Successful");
                     this.dispose();
-                    FrontEnd frontEnd = new FrontEnd(new DataLayer(userName,password));
+                    FrontEnd frontEnd = new FrontEnd(new DataLayer(),userName);
                 }
                 // If Password is incorrect
                 else {
@@ -108,9 +108,8 @@ public class Login extends JFrame implements ActionListener {
             }
         }
     }
-
-    public static void main(String[] args) {
-        IDandPasswords iDandPasswords = new IDandPasswords();
+   public static void launch() {
+         IDandPasswords iDandPasswords = new IDandPasswords();
 
         // set look and feel to the system look and feel
         try {
@@ -125,6 +124,9 @@ public class Login extends JFrame implements ActionListener {
                 new Login(iDandPasswords.getLoginInfo()).setVisible(true);
             }
         });
+   }
+    public static void main(String[] args) {
+        launch();
     }
 }
 

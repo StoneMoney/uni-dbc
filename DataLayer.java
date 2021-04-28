@@ -27,9 +27,9 @@ public class DataLayer {
     final String DEFAULT_Driver = "com.mysql.cj.jdbc.Driver";
 
     // Default Constructor
-    public DataLayer(String username, String password){
-      this.username = username;
-      this.password = password;
+    public DataLayer(){
+      this.username = "root";
+      this.password = "student";
     }
 
     /***
@@ -409,13 +409,8 @@ public class DataLayer {
         }// End of catch Block
     }// end of insertStudent
 
-
-   public String getUsername() {
-      return username;
-   }
-
     public static void main(String[] args) {
-        DataLayer dataLayer = new DataLayer("root","student");
+        DataLayer dataLayer = new DataLayer();
         dataLayer.connect();
         System.out.println("Hello!");
     }
