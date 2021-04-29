@@ -88,7 +88,7 @@ public class DataLayer {
 
         return true;
     }// End of close()
-
+   
    public String get(String table, int id) {
       String ret = "";
       try {
@@ -98,7 +98,7 @@ public class DataLayer {
          ResultSetMetaData rsmd = rs.getMetaData();
          int colCount = rsmd.getColumnCount();
          rs.next();
-         for(int i = 1; i < colCount; i++) {
+         for(int i = 1; i < colCount+1; i++) {
             ret+=rsmd.getColumnName(i)+": "+rs.getObject(i)+"\n";
          }
       } catch (SQLException sqle){
@@ -110,8 +110,91 @@ public class DataLayer {
       return ret;
    }
    
+   public boolean drop(String table, int id){
+        // Local Variables
+        String sql = "DELETE FROM "+table+" where "+table+"ID = " + id;
+        int number_rows = 0;
+        try{
+            Statement stmt = conn.createStatement();
+            number_rows = stmt.executeUpdate(sql);
+            if(number_rows > 0) {
+               return true;
+            }
+        }// End of Try Block
+        catch(SQLException sqle){
+            System.out.println("ERROR MESSAGE -> " + sqle);
+            System.out.println("ERROR SQLException in drop()");
+            sqle.printStackTrace();
+
+            return false;
+        }// End of Catch block
+        return false;
+    }
+    
+    public String[] getCurrentTerms(String table, int id, String[] terms) {
+      String[] currentTerms = new String[terms.length];
+      String sql = "SELECT ";
+      for(int i = 0; i < terms.length; i++) {
+         sql+= (i == 0 ? " " : ", ")+terms[i].toLowerCase().replaceAll(" ","");
+      }
+      sql+=" FROM "+table+" WHERE "+table+"ID = "+id+";";
+      try{
+         Statement stmt = conn.createStatement();
+         ResultSet rs = stmt.executeQuery(sql);
+         ResultSetMetaData rsmd = rs.getMetaData();
+         int colCount = rsmd.getColumnCount();
+         rs.next();
+         for(int i = 1; i < colCount+1; i++) {
+            currentTerms[i-1] = rs.getString(i);
+         }
+      }// End of Try Block
+      catch (SQLException sqle){
+         System.out.println("ERROR MESSAGE -> " + sqle);
+         System.out.println("ERROR SQLException in getCurrentTerms()");
+      }
+      return currentTerms;
+    }
+    
+    public boolean modify(String table, int id, String[] terms, String[] values) {
+      String sql = "UPDATE "+table+" SET ";
+      for(int i = 0; i < terms.length; i++) {
+         sql+= (i == 0 ? " " : ", ")+terms[i].toLowerCase().replaceAll(" ","")+" = \""+values[i]+"\"";
+      }
+      sql+=" WHERE "+table+"ID = "+id+";";
+      try{
+         Statement stmt = conn.createStatement();
+         stmt.executeUpdate(sql);
+         return true;
+      }// End of Try Block
+      catch (SQLException sqle){
+         System.out.println("ERROR MESSAGE -> " + sqle);
+         System.out.println("ERROR SQLException in updateFaculty()");
+         return false;
+      }
+    }
+    
+    public boolean insert(String table, String[] terms, String[] values) {
+      String sql = "INSERT INTO "+table+"(";
+      for(int i = 0; i < terms.length; i++) {
+         sql+= (i == 0 ? " " : ", ")+terms[i].toLowerCase().replaceAll(" ","");
+      }
+      sql+=") VALUES (";
+      for(int i = 0; i < terms.length; i++) {
+         sql+= (i == 0 ? " " : ", ")+"\""+values[i]+"\"";
+      }
+      sql+=");";
+      try {
+         Statement stmt = conn.createStatement();
+         stmt.executeUpdate(sql);
+         return true;
+      } catch (SQLException sqle){
+         sqle.printStackTrace();
+      }
+      return false;
+    }
+   
    public ArrayList<MatchingData> getList(String table) {
-      String sql = "SELECT * FROM "+table.toLowerCase()+" LIMIT 10;";
+      String sql = "SELECT * FROM "+table.toLowerCase()+";";
       ArrayList<MatchingData> list = new ArrayList<MatchingData>();
       try {
          Statement stmt = conn.createStatement();

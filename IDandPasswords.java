@@ -9,7 +9,6 @@ public class IDandPasswords {
         logininfo.put("admin","password");
         logininfo.put("spf2962","password");
         logininfo.put("JHabermas","password");
-        logininfo.put("guest","password");
     }
 
     public HashMap getLoginInfo(){

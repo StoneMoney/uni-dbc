@@ -1,4 +1,4 @@
-/***
+/**
  * Authors:
  *      Farrell, Stephen
  *      Giancursio, Nick
@@ -24,7 +24,8 @@ public class Login extends JFrame implements ActionListener {
     private JLabel labelPassword = new JLabel("Enter password: ");
     private JTextField textUsername = new JTextField(20);
     private JPasswordField fieldPassword = new JPasswordField(20);
-    private JButton buttonLogin = new JButton("Login");
+    private JButton buttonLogin = new JButton("Faculty Login");
+    private JButton guestButtonLogin = new JButton("Guest Login");
     private JLabel labelMessage = new JLabel();
 
 
@@ -64,9 +65,15 @@ public class Login extends JFrame implements ActionListener {
         constraints.gridx = 0;
         constraints.gridy = 2;
         constraints.gridwidth = 2;
-        constraints.anchor = GridBagConstraints.CENTER;
+        //constraints.anchor = GridBagConstraints.CENTER;
         newPanel.add(buttonLogin, constraints);
         buttonLogin.addActionListener(this);
+
+        constraints.gridx = 1;
+        constraints.gridy = 2;
+        constraints.gridwidth = 2;
+        newPanel.add(guestButtonLogin, constraints);
+        guestButtonLogin.addActionListener(this);
 
         // set border for the panel
         newPanel.setBorder(BorderFactory.createTitledBorder(
@@ -93,7 +100,7 @@ public class Login extends JFrame implements ActionListener {
                     labelMessage.setText("Login Successful");
                     System.out.println("Login Successful");
                     this.dispose();
-                    FrontEnd frontEnd = new FrontEnd(new DataLayer(),userName);
+                    FrontEnd frontEnd = new FrontEnd(new DataLayer(),userName, true);
                 }
                 // If Password is incorrect
                 else {
@@ -106,6 +113,12 @@ public class Login extends JFrame implements ActionListener {
                 labelMessage.setText("Username not found!");
                 System.out.println("Username not found!");
             }
+        }
+        else if (e.getSource() == guestButtonLogin){
+            String username = "Guest";
+            this.dispose();
+            FrontEnd frontEnd = new FrontEnd(new DataLayer(), username, false);
+
         }
     }
    public static void launch() {
